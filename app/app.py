@@ -5,9 +5,7 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-import cv2
 from flask import Flask, flash, redirect, render_template, request, url_for
-from ultralytics import YOLO
 
 
 # 允许上传的文件类型
@@ -32,6 +30,9 @@ def create_app() -> Flask:
     # 尝试加载模型，若失败则在页面给出提示
     model = None
     if MODEL_PATH.exists():
+        # 中文注释：仅在需要加载模型时导入 ultralytics，避免无模型场景下启动失败
+        from ultralytics import YOLO
+
         model = YOLO(str(MODEL_PATH))
     else:
         print(f"[警告] 未找到模型文件: {MODEL_PATH}")
@@ -73,6 +74,9 @@ def create_app() -> Flask:
             # 使用 YOLOv8 模型进行预测
             results = model.predict(source=str(upload_path), conf=0.25, verbose=False)
             result = results[0]
+
+            # 中文注释：仅在需要推理绘制时导入 cv2，避免无依赖时无法启动应用
+            import cv2
 
             # 读取原图，并绘制人脸框
             image = cv2.imread(str(upload_path))
