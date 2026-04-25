@@ -59,7 +59,14 @@ face-detection-yolov8/
 ├── notebooks/
 │   └── 01_train_yolov8_face_detection.ipynb
 ├── scripts/
-│   └── split_dataset.py
+│   ├── split_dataset.py
+│   ├── 01_split_dataset.py
+│   ├── 02_train_yolov8.py
+│   ├── 03_evaluate_model.py
+│   ├── 04_predict_image.py
+│   └── 05_predict_video.py
+├── docs/
+│   └── README_script_version.md
 ├── .gitignore
 ├── README.md
 └── requirements.txt
@@ -161,9 +168,28 @@ http://127.0.0.1:5000
 - 自动进行人脸检测并绘制框。
 - 页面同时展示原图与检测结果图。
 
+
 ---
 
-## 8. GitHub 上传说明
+## 8. 纯脚本版本运行方式
+
+如果你不使用 Flask，也可以直接使用 `scripts/` 下的脚本完成全流程（在项目根目录执行）：
+
+```bash
+python scripts/01_split_dataset.py
+python scripts/02_train_yolov8.py
+python scripts/03_evaluate_model.py
+python scripts/04_predict_image.py --source test_images/sample.jpg
+python scripts/05_predict_video.py --source test_videos/sample.mp4
+```
+
+更多脚本参数与说明见：
+
+```text
+docs/README_script_version.md
+```
+
+## 9. GitHub 上传说明
 
 由于数据和权重通常较大，本项目默认忽略以下内容：
 
@@ -186,7 +212,7 @@ git push -u origin main
 
 ---
 
-## 9. 团队分工表（示例）
+## 10. 团队分工表（示例）
 
 | 成员 | 角色 | 负责内容 |
 |---|---|---|
@@ -198,7 +224,7 @@ git push -u origin main
 
 ---
 
-## 10. 初学者建议
+## 11. 初学者建议
 
 - 先跑通最小流程，再逐步调参（如 `epochs`、`imgsz`、`batch`）。
 - 如果显存不足，先减小 `batch` 或 `imgsz`。
