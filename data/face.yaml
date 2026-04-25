@@ -1,0 +1,8 @@
+# YOLOv8 数据集配置文件
+path: data/wider_face_yolo_split
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: face

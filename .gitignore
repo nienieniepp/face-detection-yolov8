@@ -1,0 +1,19 @@
+# 数据与训练产物
+data/*
+!data/face.yaml
+runs/
+*.pt
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# Flask 上传与结果图
+app/static/uploads/
+app/static/results/
+
+# 其他常见文件
+.venv/
+.env
+.ipynb_checkpoints/
+.DS_Store
