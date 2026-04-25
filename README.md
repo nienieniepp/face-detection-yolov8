@@ -67,7 +67,20 @@ face-detection-yolov8/
 
 ---
 
-## 4. 安装步骤
+
+## 4. 推荐运行顺序（务必按顺序）
+
+1. **确认原始数据目录**：`data/wider_face_yolo/images` 与 `data/wider_face_yolo/labels`。
+2. **安装依赖**：`pip install -r requirements.txt`。
+3. **切分数据**：运行 `python scripts/split_dataset.py --clean`。
+4. **开始训练**：打开 `notebooks/01_train_yolov8_face_detection.ipynb`，执行全部单元。
+5. **确认模型导出**：检查 `models/best.pt` 是否生成。
+6. **启动 Web**：`python app/app.py`，浏览器打开 `http://127.0.0.1:5000`。
+
+---
+
+## 5. 安装步骤
+
 
 > 建议使用 Python 3.10+。
 
@@ -86,7 +99,7 @@ pip install -r requirements.txt
 
 ---
 
-## 5. 训练步骤（命令行方式）
+## 6. 训练步骤（命令行方式）
 
 ### 第一步：切分数据集
 
@@ -98,7 +111,7 @@ python scripts/split_dataset.py \
   --val-ratio 0.1 \
   --test-ratio 0.1 \
   --seed 42 \
-  --copy
+  --clean
 ```
 
 ### 第二步：开始训练
@@ -122,7 +135,7 @@ Notebook 中已包含以下流程：
 
 ---
 
-## 6. Flask Web 应用运行步骤
+## 7. Flask Web 应用运行步骤
 
 确保你已经得到训练后的模型：
 
@@ -150,7 +163,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 7. GitHub 上传说明
+## 8. GitHub 上传说明
 
 由于数据和权重通常较大，本项目默认忽略以下内容：
 
@@ -173,7 +186,7 @@ git push -u origin main
 
 ---
 
-## 8. 团队分工表（示例）
+## 9. 团队分工表（示例）
 
 | 成员 | 角色 | 负责内容 |
 |---|---|---|
@@ -185,7 +198,7 @@ git push -u origin main
 
 ---
 
-## 9. 初学者建议
+## 10. 初学者建议
 
 - 先跑通最小流程，再逐步调参（如 `epochs`、`imgsz`、`batch`）。
 - 如果显存不足，先减小 `batch` 或 `imgsz`。

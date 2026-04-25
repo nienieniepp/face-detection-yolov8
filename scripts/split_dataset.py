@@ -32,9 +32,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--test-ratio", type=float, default=0.1, help="测试集比例")
     parser.add_argument("--seed", type=int, default=42, help="随机种子，保证可复现")
     parser.add_argument(
-        "--copy",
+        "--hardlink",
         action="store_true",
-        help="默认使用硬链接；若希望复制文件请开启该参数",
+        help="默认复制文件；若希望节省空间并使用硬链接请开启该参数",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="切分前清空目标目录，避免历史结果残留",
     )
     return parser.parse_args()
 
@@ -52,12 +57,15 @@ def collect_image_label_pairs(source_dir: Path) -> list[tuple[Path, Path]]:
     labels_dir = source_dir / "labels"
 
     if not images_dir.exists() or not labels_dir.exists():
-        raise FileNotFoundError("source 目录下必须包含 images/ 和 labels/ 子目录")
+        raise FileNotFoundError(
+            "source 目录下必须包含 images/ 和 labels/ 子目录。"
+            "例如 data/wider_face_yolo/images 与 data/wider_face_yolo/labels"
+        )
 
     pairs: list[tuple[Path, Path]] = []
     missing_labels: list[Path] = []
 
-    # 遍历所有图片，按相同 stem 匹配标签 txt
+    # 遍历所有图片，按相同相对路径匹配标签 txt
     for image_path in sorted(images_dir.rglob("*")):
         if not image_path.is_file() or image_path.suffix.lower() not in IMAGE_EXTENSIONS:
             continue
@@ -78,27 +86,31 @@ def collect_image_label_pairs(source_dir: Path) -> list[tuple[Path, Path]]:
     return pairs
 
 
-def prepare_output_dirs(target_dir: Path) -> None:
-    """创建输出目录结构。"""
+def prepare_output_dirs(target_dir: Path, clean: bool) -> None:
+    """创建输出目录结构，可选清理旧文件。"""
+    if clean and target_dir.exists():
+        shutil.rmtree(target_dir)
+
     for split_name in ("train", "val", "test"):
         (target_dir / "images" / split_name).mkdir(parents=True, exist_ok=True)
         (target_dir / "labels" / split_name).mkdir(parents=True, exist_ok=True)
 
 
-def transfer_file(src: Path, dst: Path, copy_files: bool) -> None:
-    """传输文件：可选择硬链接或复制。"""
+def transfer_file(src: Path, dst: Path, use_hardlink: bool) -> None:
+    """传输文件：默认复制，可选硬链接。"""
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists():
         dst.unlink()
 
-    if copy_files:
-        shutil.copy2(src, dst)
-    else:
+    if use_hardlink:
         try:
             dst.hardlink_to(src)
+            return
         except OSError:
             # 如果硬链接失败（例如跨分区），自动退化为复制
-            shutil.copy2(src, dst)
+            pass
+
+    shutil.copy2(src, dst)
 
 
 def split_pairs(
@@ -126,7 +138,7 @@ def materialize_splits(
     split_map: dict[str, list[tuple[Path, Path]]],
     source_dir: Path,
     target_dir: Path,
-    copy_files: bool,
+    use_hardlink: bool,
 ) -> None:
     """将切分结果写入目标目录。"""
     images_dir = source_dir / "images"
@@ -140,8 +152,8 @@ def materialize_splits(
             target_image = target_dir / "images" / split_name / image_rel
             target_label = target_dir / "labels" / split_name / label_rel
 
-            transfer_file(image_path, target_image, copy_files)
-            transfer_file(label_path, target_label, copy_files)
+            transfer_file(image_path, target_image, use_hardlink)
+            transfer_file(label_path, target_label, use_hardlink)
 
 
 def main() -> None:
@@ -150,9 +162,9 @@ def main() -> None:
     validate_ratios(args.train_ratio, args.val_ratio, args.test_ratio)
 
     pairs = collect_image_label_pairs(args.source)
-    prepare_output_dirs(args.target)
+    prepare_output_dirs(args.target, clean=args.clean)
     split_map = split_pairs(pairs, args.train_ratio, args.val_ratio, args.seed)
-    materialize_splits(split_map, args.source, args.target, args.copy)
+    materialize_splits(split_map, args.source, args.target, use_hardlink=args.hardlink)
 
     print("切分完成：")
     for split_name, items in split_map.items():
